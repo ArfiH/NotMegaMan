@@ -79,6 +79,20 @@ void GameEngine::sUserInput() {
             currentScene()->doAction(Action(currentScene()->getActionMap().at(keyCode), actionType));
         }
     }
+    
+    // Reset flags every frame so movement stops when keys are released
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
+            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::W), "START"));
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::S), "START"));
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::A), "START"));
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::D), "START"));
+    }
 }
 
 void GameEngine::changeScene(const std::string &sceneName, std::shared_ptr<Scene> scene, bool endCurrentScene) {

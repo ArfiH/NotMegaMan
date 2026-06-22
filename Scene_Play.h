@@ -51,9 +51,9 @@ protected:
 
     void onEnd() override;
 
-//    void changePlayerStateTo(PlayerState s);
-//    void spawnCoinSpin(std::shared_ptr<Entity> tile);
-//    void spawnBrickDebris(std::shared_ptr<Entity> tile);
+//  void changePlayerStateTo(PlayerState s);
+//  void spawnCoinSpin(std::shared_ptr<Entity> tile);
+//  void spawnBrickDebris(std::shared_ptr<Entity> tile);
 
 public:
     Scene_Play(GameEngine *gameEngine, const std::string &levelPath);

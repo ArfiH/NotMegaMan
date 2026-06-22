@@ -127,6 +127,7 @@ void Scene_Play::spawnPlayer() {
     m_player->addComponent<CBoundingBox>(vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CInput>();
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
+    m_player->addComponent<CState>("Stand");
 
     // TODO: be sure to add the remaining components to the player
 }
@@ -154,8 +155,15 @@ void Scene_Play::sMovement() {
     // TODO: Implement the maximum player speed in both X and Y directions
     // NOTE: Setting an entity's scale.x to -1/1 will make it face to the left/right
 
+    // Update prevPos of player
+    m_player->getComponent<CTransform>().prevPos = m_player->getComponent<CTransform>().pos;
+
     // for all entities having CGravity component, apply gravity velocity
     m_player->getComponent<CTransform>().velocity.y += m_player->getComponent<CGravity>().gravity;
+
+    // set limit to player speed
+    m_player->getComponent<CTransform>().velocity.x = std::min(m_playerConfig.MAX_SPEED, m_player->getComponent<CTransform>().velocity.x);
+    m_player->getComponent<CTransform>().velocity.y = std::min(m_playerConfig.MAX_SPEED, m_player->getComponent<CTransform>().velocity.y);
 
     m_player->getComponent<CTransform>().pos += m_player->getComponent<CTransform>().velocity;
 }
@@ -171,18 +179,48 @@ void Scene_Play::sCollision() {
     //           Also, something BELOW something else will hava a y value GREATER than it
     //           Also, something ABOVE something else will hava a y value LESS than it
 
-    // TODO: Implement Physics::GetOverlap() function, use it inside this function
-    
     // player collision check with ground
     for (const auto& b: m_entityManager.getEntities("tile")) {
         if (!b->hasComponent<CBoundingBox>() || m_player->getComponent<CAnimation>().animation.getName() == b->getComponent<CAnimation>().animation.getName()) {
             continue;
         }
+
+        vec2 pos = m_player->getComponent<CTransform>().pos;
+        vec2 prevPos = m_player->getComponent<CTransform>().prevPos;
         vec2 overlap = m_worldPhysics.GetOverlap(m_player, b);
-        
-        // stop player when he touches ground
+        vec2 prevOverlap = m_worldPhysics.GetPreviousOverlap(m_player, b);
+
         if (overlap.x > 0 && overlap.y > 0) {
-            m_player->getComponent<CTransform>().velocity.y = 0;
+            // if player collided with ground, change state to Stand
+            if (b->getComponent<CAnimation>().animation.getName() == "Ground") {
+                m_player->getComponent<CState>().state = "Stand";
+            }
+
+            // check player direction and resolve collision
+            // player came from either left or right
+            if (prevOverlap.y > 0) {
+                // player came from right
+                if (prevPos.x > pos.x) {
+                    m_player->getComponent<CTransform>().pos.x += overlap.x;
+                }
+                else {
+                    m_player->getComponent<CTransform>().pos.x -= overlap.x;
+                }
+            }
+            else {
+                // player came from down
+                if (prevPos.y > pos.y) {
+                    // destroy tile which has brick animation
+                    if (b->getComponent<CAnimation>().animation.getName() == "Brick") {
+                        b->destroy();
+                    }
+
+                    m_player->getComponent<CTransform>().pos.y += overlap.y;
+                }
+                else {
+                    m_player->getComponent<CTransform>().pos.y -= overlap.y;
+                }
+            }
         }
     }    
 
@@ -200,23 +238,27 @@ void Scene_Play::sCollision() {
 void Scene_Play::sDoAction(const Action &action) {
     if (action.type() == "START") {
         if (action.name() == "TOGGLE_TEXTURE") { m_drawTextures = !m_drawTextures; }
-        else if (action.name() == "TOGGLE_COLLISION") { m_drawCollision = !m_drawCollision; }
-        else if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; }
-        else if (action.name() == "PAUSE") { setPaused(!m_paused); }
-        else if (action.name() == "QUIT") { onEnd(); }
-        else if (action.name() == "JUMP") {
-            std::cerr << "Perform Jump\n";
-            m_player->getComponent<CTransform>().velocity.y = -m_playerConfig.JUMP;
+        if (action.name() == "TOGGLE_COLLISION") { m_drawCollision = !m_drawCollision; }
+        if (action.name() == "TOGGLE_GRID") { m_drawGrid = !m_drawGrid; }
+        if (action.name() == "PAUSE") { setPaused(!m_paused); }
+        if (action.name() == "QUIT") { onEnd(); }
+        if (action.name() == "JUMP") {
+            if (m_player->getComponent<CState>().state == "Stand") {
+                std::cerr << "Perform Jump\n";
+                m_player->getComponent<CTransform>().velocity.y = -m_playerConfig.JUMP;
+            }
+            m_player->getComponent<CState>().state = "Jumping";
         }
-        else if (action.name() == "RIGHT") {
+        if (action.name() == "RIGHT") {
             std::cerr << "Perform RIGHT\n";
-            m_player->getComponent<CTransform>().velocity.x += 3.f;
+            m_player->getComponent<CTransform>().pos.x += m_playerConfig.SPEED;
         }
-        else if (action.name() == "LEFT") {
+        if (action.name() == "LEFT") {
             std::cerr << "Perform LEFT\n";
-            m_player->getComponent<CTransform>().velocity.x += -3.f;
+            m_player->getComponent<CTransform>().pos.x += -m_playerConfig.SPEED;
         }
-    } else if (action.type() == "END") {
+    }   
+    else if (action.type() == "END") {
 
     }
 }

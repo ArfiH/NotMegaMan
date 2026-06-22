@@ -82,7 +82,7 @@ public:
 
 class CState : public Component {
 public:
-    std::string state = "jumping";
+    std::string state = "Jumping";
 
     CState() = default;
 
