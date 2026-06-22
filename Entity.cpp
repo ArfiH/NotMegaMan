@@ -3,15 +3,15 @@
 
 Entity::Entity(const size_t i, std::string t)
         : m_id(i), m_tag(std::move(t)) {
-//    m_components = std::make_tuple(
-//            CTransform(),
-//            CLifespan(),
-//            CInput(),
-//            CBoundingBox(),
-//            CAnimation(),
-//            CGravity(),
-//            CState()
-//    );
+    m_components = std::make_tuple(
+           CTransform(),
+           CLifespan(),
+           CInput(),
+           CBoundingBox(),
+           CAnimation(),
+           CGravity(),
+           CState()
+    );
 }
 
 bool Entity::isActive() const {

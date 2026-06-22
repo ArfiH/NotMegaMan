@@ -1,4 +1,4 @@
-Texture     MegaStand       ../images/megaman/megaStand.png
+Texture     MegaStand       ../images/megaman/megaStand_resized.png
 Texture     MegaShot        ../images/megaman/megaShot.png
 Texture     MegaRun         ../images/megaman/megaRun.png
 Texture     MegaJump        ../images/megaman/megaJump.png
@@ -14,6 +14,9 @@ Texture     SmallPipe       ../images/mario/SmallPipe.png
 Texture     BigCloud        ../images/mario/BigCloud.png
 Texture     GoombaDeath     ../images/mario/GoombaDeath.png
 Texture		Brick			../images/mario/brick.png
+Texture		ActiveQues		../images/mario/question2_resized.png
+Texture		InactiveQues	../images/mario/question_resized.png
+
 Animation   Stand           MegaStand       1   1
 Animation   Ground          Ground          1   1
 Animation   Run             MegaRun         3   8
@@ -30,5 +33,7 @@ Animation   SmallPipe       SmallPipe       1   1
 Animation   BigCloud        BigCloud        1   1
 Animation   GoombaDeath     GoombaDeath     2   6
 Animation 	Brick			Brick			1   1
+Animation 	ActiveQues		ActiveQues		1   1
+Animation 	InactiveQues		InactiveQues		1   1
 Font        Mario           ../fonts/Mario.ttf
 Font        Tech            ../fonts/tech.ttf

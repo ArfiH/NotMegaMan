@@ -6,6 +6,7 @@
 
 #include "SFML/Graphics/Text.hpp"
 #include "Scene.h"
+#include "Physics.h"
 #include "EntityManager.h"
 
 
@@ -24,7 +25,7 @@ protected:
     bool m_drawGrid = false;
     const vec2 m_gridSize = {64, 64};
     sf::Text m_gridText;
-    // Physics m_worldPhysics;
+    Physics m_worldPhysics;
 
     void init(const std::string &levelPath);
 
