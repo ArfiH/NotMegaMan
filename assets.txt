@@ -1,7 +1,7 @@
 Texture     MegaStand       ../images/megaman/megaStand_resized.png
-Texture     MegaShot        ../images/megaman/megaShot.png
+Texture     MegaShot        ../images/megaman/megaShot_resized.png
 Texture     MegaRun         ../images/megaman/megaRun_resized.png
-Texture     MegaJump        ../images/megaman/megaJump.png
+Texture     MegaJump        ../images/megaman/megaJump_resized.png
 Texture     MegaBuster      ../images/megaman/megaBuster.png
 Texture     Ground          ../images/mario/ground.png
 Texture     SmallCloud      ../images/mario/SmallCloud.png

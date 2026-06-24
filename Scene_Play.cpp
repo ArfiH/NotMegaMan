@@ -132,7 +132,7 @@ void Scene_Play::spawnPlayer() {
     m_player->addComponent<CBoundingBox>(vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CInput>();
     m_player->addComponent<CGravity>(m_playerConfig.GRAVITY);
-    m_player->addComponent<CState>("Stand");
+    m_player->addComponent<CState>("Standing");
 
     // TODO: be sure to add the remaining components to the player
 }
@@ -146,8 +146,8 @@ void Scene_Play::spawnBullet(std::shared_ptr<Entity> e) {
     vec2 playerPos = e->getComponent<CTransform>().pos;
     bullet->addComponent<CBoundingBox>(vec2(32.f, 32.f));
     bullet->addComponent<CTransform>(playerPos);
-    bullet->getComponent<CTransform>().velocity = vec2(12.f, 0.f);
-    bullet->getComponent<CTransform>().scale = e->getComponent<CTransform>().scale;
+    vec2 scale = e->getComponent<CTransform>().scale;
+    bullet->getComponent<CTransform>().velocity = vec2(20.f * scale.x, 0.f);
 }
 
 void Scene_Play::update() {
@@ -197,6 +197,12 @@ void Scene_Play::sCollision() {
     //           Also, something BELOW something else will hava a y value GREATER than it
     //           Also, something ABOVE something else will hava a y value LESS than it
 
+    // is player fell down a hole, go back to main menu
+    vec2 pos = m_player->getComponent<CTransform>().pos;
+    if (pos.y > m_game->window().getSize().y) {
+        onEnd();
+    }
+
     // player collision check with ground
     for (const auto& b: m_entityManager.getEntities("tile")) {
         if (!b->hasComponent<CBoundingBox>() || m_player->getComponent<CAnimation>().animation.getName() == b->getComponent<CAnimation>().animation.getName()) {
@@ -209,9 +215,12 @@ void Scene_Play::sCollision() {
         vec2 prevOverlap = m_worldPhysics.GetPreviousOverlap(m_player, b);
 
         if (overlap.x > 0 && overlap.y > 0) {
-            // if player collided with anything, change state to Stand
-            m_player->getComponent<CState>().state = "Stand";
             m_player->getComponent<CTransform>().velocity.y = 0;
+
+            // if player is in contact with ground and not running or shooting, set state to standing
+            // if (m_player->getComponent<CState>().state != "Running" && m_player->getComponent<CState>().state != "Shooting") {
+            //     m_player->getComponent<CState>().state = "Standing";
+            // }
 
             // check player direction and resolve collision
             // player came from either left or right
@@ -250,14 +259,14 @@ void Scene_Play::sCollision() {
 
             vec2 overlap = m_worldPhysics.GetOverlap(b, e);            
             if (overlap.x > 0 && overlap.y > 0) {
-                e->destroy();
+                if (e->getComponent<CAnimation>().animation.getName() == "Brick") {
+                    e->destroy();
+                }
                 b->destroy();
             }
         }
     }    
 
-    // TODO: Implement bullet/tile collisions
-    //       Destroy the tile if it has a Brick animation
     // TODO: Implement player/tile collisions and resolutions
     //       Update the CState component of the player to store whether
     //       it is currently on the ground or in the air. This will be
@@ -267,6 +276,8 @@ void Scene_Play::sCollision() {
 }
 
 void Scene_Play::sDoAction(const Action &action) {
+    m_player->getComponent<CState>().state = "Standing";
+    
     if (action.type() == "START") {
         if (action.name() == "TOGGLE_TEXTURE") { m_drawTextures = !m_drawTextures; }
         if (action.name() == "TOGGLE_COLLISION") { m_drawCollision = !m_drawCollision; }
@@ -284,11 +295,13 @@ void Scene_Play::sDoAction(const Action &action) {
             std::cerr << "Perform RIGHT\n";
             m_player->getComponent<CTransform>().scale.x = 1;
             m_player->getComponent<CTransform>().pos.x += m_playerConfig.SPEED;
+            m_player->getComponent<CState>().state = "Running";
         }
         if (action.name() == "LEFT") {
             std::cerr << "Perform LEFT\n";
             m_player->getComponent<CTransform>().scale.x = -1;
             m_player->getComponent<CTransform>().pos.x += -m_playerConfig.SPEED;
+            m_player->getComponent<CState>().state = "Running";
         }
         if (action.name() == "DOWN") {
             std::cerr << "Perform DOWN\n";
@@ -297,6 +310,7 @@ void Scene_Play::sDoAction(const Action &action) {
         if (action.name() == "SHOOT") {
             std::cerr << "Perform SHOOT\n";
             spawnBullet(m_player);
+            m_player->getComponent<CState>().state = "Shooting";
         }
     }   
     else if (action.type() == "END") {
@@ -306,14 +320,24 @@ void Scene_Play::sDoAction(const Action &action) {
 
 void Scene_Play::sAnimation() {
     // TODO: Complete the Animation class code first
-    if (m_player->getComponent<CState>().state == "Jumping") {
-        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Run"), true);
-        char arr[] = "Run";
-        std::string str(arr); 
-        // m_player->addComponent<CAnimation>(str, m_game->assets().getTexture("Run"), (size_t)3, (size_t)12);        
-    }
-    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);
 
+    if (m_player->getComponent<CState>().state == "Jumping") {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Jump"), true);
+        // char arr[] = "Run";
+        // std::string str(arr); 
+    }
+    else if (m_player->getComponent<CState>().state == "Standing") {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);        
+    }
+    else if (m_player->getComponent<CState>().state == "Running") {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Run"), true);        
+    }
+    else if (m_player->getComponent<CState>().state == "Shooting") {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Shot"), true);        
+    }
+    
+    
+    // m_player->addComponent<CAnimation>(str, m_game->assets().getTexture("Run"), (size_t)3, (size_t)12);        
     // m_player->addComponent<CAnimation>().animation.update();
 }
 
