@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "SFML/Window/Keyboard.hpp"
+#include "SFML/Window/Mouse.hpp"
 #include "Action.h"
 #include "EntityManager.h"
 
@@ -11,12 +12,14 @@
 class GameEngine;
 
 typedef std::map<sf::Keyboard::Key, std::string> ActionMap;
+typedef std::map<sf::Mouse::Button, std::string> MouseActionMap;
 
 class Scene {
 protected:
     GameEngine *m_game = nullptr;
     EntityManager m_entityManager;
     ActionMap m_actionMap;
+    MouseActionMap m_mouseActionMap;
     bool m_paused = false;
     bool m_hasEnded = false;
     size_t m_currentFrame = 0;
@@ -44,6 +47,8 @@ public:
     void simulate(size_t frames);
 
     void registerAction(sf::Keyboard::Key inputKey, const std::string &actionName);
+
+    void registerMouseAction(sf::Mouse::Button inputKey, const std::string& actionName);
 
     [[nodiscard]] size_t width() const;
 

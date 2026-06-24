@@ -9,12 +9,12 @@
 
 
 class Animation {
-    static sf::Texture s_defaultTexture; // SFML3: sf::Sprite has no default ctor, so the default Animation() needs a texture to bind to
-    sf::Sprite m_sprite{s_defaultTexture};
-    size_t m_frameCount = 1;       // total number of frames of animation
-    size_t m_currentFrame = 0;     // the current frame of animation being played
-    size_t m_speed = 0;            // the speed to play this animation
-    vec2 m_size = {1, 1}; // size of the animation frame
+    static sf::Texture s_defaultTexture;    // SFML3: sf::Sprite has no default ctor, so the default Animation() needs a texture to bind to
+    sf::Sprite m_sprite{s_defaultTexture};  
+    size_t m_frameCount = 1;                // total number of frames of animation
+    size_t m_currentFrame = 0;              // the current frame of animation being played
+    size_t m_speed = 0;                     // the speed to play this animation
+    vec2 m_size = {1, 1};                   // size of the animation frame
     std::string m_name = "none";
 public:
     Animation();

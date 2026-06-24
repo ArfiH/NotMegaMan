@@ -80,7 +80,7 @@ void GameEngine::sUserInput() {
         }
     }
     
-    // Reset flags every frame so movement stops when keys are released
+    // Check inputs every frame so movement stops when keys are released
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
             currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::W), "START"));
     }

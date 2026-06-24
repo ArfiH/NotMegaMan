@@ -2,11 +2,12 @@
 #include <fstream>
 
 #include "SFML//Window/Event.hpp"
-//#include "Scene_Menu.h"
+#include "Scene_Menu.h"
 #include "Scene_Play.h"
 #include "Assets.h"
 #include "Physics.h"
 #include "GameEngine.h"
+#include "Animation.h"
 #include "Components.h"
 #include "Action.h"
 #include "SFML/Graphics/RectangleShape.hpp"
@@ -27,8 +28,11 @@ void Scene_Play::init(const std::string &levelPath) {
     registerAction(sf::Keyboard::Key::W, "JUMP");
     registerAction(sf::Keyboard::Key::D, "RIGHT");
     registerAction(sf::Keyboard::Key::A, "LEFT");
+    registerAction(sf::Keyboard::Key::S, "DOWN");
+    registerAction(sf::Keyboard::Key::Space, "SHOOT");
 
     // TODO: Register all MOUSE gameplay Actions
+    // registerMouseAction(sf::Mouse::Button::Left, "SHOOT");
 
     m_gridText.setCharacterSize(12);
     m_gridText.setFont(m_game->assets().getFont("Mario"));
@@ -123,6 +127,7 @@ void Scene_Play::spawnPlayer() {
 
     m_player = m_entityManager.addEntity("player");
     m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);
+    // m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Run"), true);
     m_player->addComponent<CTransform>(gridToMidPixel(m_playerConfig.X, m_playerConfig.Y, m_player));
     m_player->addComponent<CBoundingBox>(vec2(m_playerConfig.CX, m_playerConfig.CY));
     m_player->addComponent<CInput>();
@@ -132,8 +137,17 @@ void Scene_Play::spawnPlayer() {
     // TODO: be sure to add the remaining components to the player
 }
 
-void Scene_Play::spawnBullet(std::shared_ptr<Entity> entity) {
+void Scene_Play::spawnBullet(std::shared_ptr<Entity> e) {
     // TODO: this should spawn a bullet at the given entity, going in the direction the entity is facing
+    std::cerr << "Spawned Bullet\n";
+    auto bullet = m_entityManager.addEntity("bullet");
+    // bullet->addComponent<CAnimation>(m_game->assets().getAnimation(m_playerConfig.WEAPON), true);
+    bullet->addComponent<CAnimation>(m_game->assets().getAnimation("Buster"), true);
+    vec2 playerPos = e->getComponent<CTransform>().pos;
+    bullet->addComponent<CBoundingBox>(vec2(32.f, 32.f));
+    bullet->addComponent<CTransform>(playerPos);
+    bullet->getComponent<CTransform>().velocity = vec2(12.f, 0.f);
+    bullet->getComponent<CTransform>().scale = e->getComponent<CTransform>().scale;
 }
 
 void Scene_Play::update() {
@@ -166,6 +180,10 @@ void Scene_Play::sMovement() {
     m_player->getComponent<CTransform>().velocity.y = std::min(m_playerConfig.MAX_SPEED, m_player->getComponent<CTransform>().velocity.y);
 
     m_player->getComponent<CTransform>().pos += m_player->getComponent<CTransform>().velocity;
+
+    for (const auto& e: m_entityManager.getEntities("bullet")) {
+        e->getComponent<CTransform>().pos += e->getComponent<CTransform>().velocity;
+    }
 }
 
 void Scene_Play::sLifespan() {
@@ -191,10 +209,9 @@ void Scene_Play::sCollision() {
         vec2 prevOverlap = m_worldPhysics.GetPreviousOverlap(m_player, b);
 
         if (overlap.x > 0 && overlap.y > 0) {
-            // if player collided with ground, change state to Stand
-            if (b->getComponent<CAnimation>().animation.getName() == "Ground") {
-                m_player->getComponent<CState>().state = "Stand";
-            }
+            // if player collided with anything, change state to Stand
+            m_player->getComponent<CState>().state = "Stand";
+            m_player->getComponent<CTransform>().velocity.y = 0;
 
             // check player direction and resolve collision
             // player came from either left or right
@@ -222,8 +239,22 @@ void Scene_Play::sCollision() {
                 }
             }
         }
-    }    
+    }
 
+    // bullet/tile collision
+    for (const auto& b : m_entityManager.getEntities("bullet")) {
+        for (const auto& e: m_entityManager.getEntities("tile")) {
+            if (!e->hasComponent<CBoundingBox>()) {
+                continue;
+            }
+
+            vec2 overlap = m_worldPhysics.GetOverlap(b, e);            
+            if (overlap.x > 0 && overlap.y > 0) {
+                e->destroy();
+                b->destroy();
+            }
+        }
+    }    
 
     // TODO: Implement bullet/tile collisions
     //       Destroy the tile if it has a Brick animation
@@ -243,7 +274,7 @@ void Scene_Play::sDoAction(const Action &action) {
         if (action.name() == "PAUSE") { setPaused(!m_paused); }
         if (action.name() == "QUIT") { onEnd(); }
         if (action.name() == "JUMP") {
-            if (m_player->getComponent<CState>().state == "Stand") {
+            if (m_player->getComponent<CState>().state != "Jumping") {
                 std::cerr << "Perform Jump\n";
                 m_player->getComponent<CTransform>().velocity.y = -m_playerConfig.JUMP;
             }
@@ -251,11 +282,21 @@ void Scene_Play::sDoAction(const Action &action) {
         }
         if (action.name() == "RIGHT") {
             std::cerr << "Perform RIGHT\n";
+            m_player->getComponent<CTransform>().scale.x = 1;
             m_player->getComponent<CTransform>().pos.x += m_playerConfig.SPEED;
         }
         if (action.name() == "LEFT") {
             std::cerr << "Perform LEFT\n";
+            m_player->getComponent<CTransform>().scale.x = -1;
             m_player->getComponent<CTransform>().pos.x += -m_playerConfig.SPEED;
+        }
+        if (action.name() == "DOWN") {
+            std::cerr << "Perform DOWN\n";
+            m_player->getComponent<CTransform>().velocity.y = m_playerConfig.JUMP;
+        }
+        if (action.name() == "SHOOT") {
+            std::cerr << "Perform SHOOT\n";
+            spawnBullet(m_player);
         }
     }   
     else if (action.type() == "END") {
@@ -265,13 +306,22 @@ void Scene_Play::sDoAction(const Action &action) {
 
 void Scene_Play::sAnimation() {
     // TODO: Complete the Animation class code first
+    if (m_player->getComponent<CState>().state == "Jumping") {
+        m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Run"), true);
+        char arr[] = "Run";
+        std::string str(arr); 
+        // m_player->addComponent<CAnimation>(str, m_game->assets().getTexture("Run"), (size_t)3, (size_t)12);        
+    }
+    m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);
+
+    // m_player->addComponent<CAnimation>().animation.update();
 }
 
 void Scene_Play::onEnd() {
     // TODO: when the scene ends, change back to the MENU scene
     // use m_game->changeScene(correct params);
-    // m_game->changeScene( "MENU", std::make_shared<Scene_Menu>(m_game));
-    m_game->quit();
+    m_game->changeScene( "MENU", std::make_shared<Scene_Menu>(m_game));
+    // m_game->quit();
 }
 
 void Scene_Play::sRender() {

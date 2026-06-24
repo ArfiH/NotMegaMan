@@ -22,6 +22,10 @@ void Scene::registerAction(sf::Keyboard::Key inputKey, const std::string &action
     m_actionMap[inputKey] = actionName;
 }
 
+void Scene::registerMouseAction(sf::Mouse::Button inputKey, const std::string& actionName) {
+    m_mouseActionMap[inputKey] = actionName;
+}
+
 size_t Scene::width() const {
     return m_game->window().getSize().x;
 }
