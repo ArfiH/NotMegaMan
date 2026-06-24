@@ -190,6 +190,59 @@ void Scene_Play::sLifespan() {
     // TODO: Check lifespan of entities the have them, and destroy them if the go over
 }
 
+bool Scene_Play::isColliding(std::shared_ptr<Entity> e, const std::string& tag) {
+    bool isCollided = false;
+
+    // player collision check with ground
+    for (const auto& b: m_entityManager.getEntities(tag)) {
+        if (!b->hasComponent<CBoundingBox>() || e->getComponent<CAnimation>().animation.getName() == b->getComponent<CAnimation>().animation.getName()) {
+            continue;
+        }
+
+        vec2 pos = e->getComponent<CTransform>().pos;
+        vec2 prevPos = e->getComponent<CTransform>().prevPos;
+        vec2 overlap = m_worldPhysics.GetOverlap(e, b);
+        vec2 prevOverlap = m_worldPhysics.GetPreviousOverlap(e, b);
+
+        if (overlap.x > 0 && overlap.y > 0) {
+            isCollided = true;
+            e->getComponent<CTransform>().velocity.y = 0;
+
+            // if player is in contact with ground and not running or shooting, set state to standing
+            // if (e->getComponent<CState>().state != "Running" && e->getComponent<CState>().state != "Shooting") {
+            //     e->getComponent<CState>().state = "Standing";
+            // }
+
+            // check player direction and resolve collision
+            // player came from either left or right
+            if (prevOverlap.y > 0) {
+                // player came from right
+                if (prevPos.x > pos.x) {
+                    e->getComponent<CTransform>().pos.x += overlap.x;
+                }
+                else {
+                    e->getComponent<CTransform>().pos.x -= overlap.x;
+                }
+            }
+            else {
+                // player came from down
+                if (prevPos.y > pos.y) {
+                    // destroy tile which has brick animation
+                    if (b->getComponent<CAnimation>().animation.getName() == "Brick") {
+                        b->destroy();
+                    }
+
+                    e->getComponent<CTransform>().pos.y += overlap.y;
+                }
+                else {
+                    e->getComponent<CTransform>().pos.y -= overlap.y;
+                }
+            }
+        }
+    }
+    return isCollided;
+}
+
 void Scene_Play::sCollision() {
     // REMEMBER: SFML's (0,0) position is in the TOP-LEFT corner
     //           This means jumping will have a negative y-component
@@ -203,52 +256,8 @@ void Scene_Play::sCollision() {
         onEnd();
     }
 
-    // player collision check with ground
-    for (const auto& b: m_entityManager.getEntities("tile")) {
-        if (!b->hasComponent<CBoundingBox>() || m_player->getComponent<CAnimation>().animation.getName() == b->getComponent<CAnimation>().animation.getName()) {
-            continue;
-        }
-
-        vec2 pos = m_player->getComponent<CTransform>().pos;
-        vec2 prevPos = m_player->getComponent<CTransform>().prevPos;
-        vec2 overlap = m_worldPhysics.GetOverlap(m_player, b);
-        vec2 prevOverlap = m_worldPhysics.GetPreviousOverlap(m_player, b);
-
-        if (overlap.x > 0 && overlap.y > 0) {
-            m_player->getComponent<CTransform>().velocity.y = 0;
-
-            // if player is in contact with ground and not running or shooting, set state to standing
-            // if (m_player->getComponent<CState>().state != "Running" && m_player->getComponent<CState>().state != "Shooting") {
-            //     m_player->getComponent<CState>().state = "Standing";
-            // }
-
-            // check player direction and resolve collision
-            // player came from either left or right
-            if (prevOverlap.y > 0) {
-                // player came from right
-                if (prevPos.x > pos.x) {
-                    m_player->getComponent<CTransform>().pos.x += overlap.x;
-                }
-                else {
-                    m_player->getComponent<CTransform>().pos.x -= overlap.x;
-                }
-            }
-            else {
-                // player came from down
-                if (prevPos.y > pos.y) {
-                    // destroy tile which has brick animation
-                    if (b->getComponent<CAnimation>().animation.getName() == "Brick") {
-                        b->destroy();
-                    }
-
-                    m_player->getComponent<CTransform>().pos.y += overlap.y;
-                }
-                else {
-                    m_player->getComponent<CTransform>().pos.y -= overlap.y;
-                }
-            }
-        }
-    }
+    // player/tile collision
+    m_isCollidingWithGround = isColliding(m_player, "tile");
 
     // bullet/tile collision
     for (const auto& b : m_entityManager.getEntities("bullet")) {
@@ -286,10 +295,12 @@ void Scene_Play::sDoAction(const Action &action) {
         if (action.name() == "QUIT") { onEnd(); }
         if (action.name() == "JUMP") {
             if (m_player->getComponent<CState>().state != "Jumping") {
-                std::cerr << "Perform Jump\n";
-                m_player->getComponent<CTransform>().velocity.y = -m_playerConfig.JUMP;
+                if (m_isCollidingWithGround) {
+                    std::cerr << "Perform Jump\n";
+                    m_player->getComponent<CTransform>().velocity.y = -m_playerConfig.JUMP;
+                }
+                m_player->getComponent<CState>().state = "Jumping";
             }
-            m_player->getComponent<CState>().state = "Jumping";
         }
         if (action.name() == "RIGHT") {
             std::cerr << "Perform RIGHT\n";

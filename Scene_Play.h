@@ -23,6 +23,7 @@ protected:
     bool m_drawTextures = true;
     bool m_drawCollision = false;
     bool m_drawGrid = false;
+    bool m_isCollidingWithGround = false;
     const vec2 m_gridSize = {64, 64};
     sf::Text m_gridText;
     Physics m_worldPhysics;
@@ -36,6 +37,8 @@ protected:
     void spawnPlayer();
 
     void spawnBullet(std::shared_ptr<Entity> entity);
+
+    bool isColliding(std::shared_ptr<Entity> e, const std::string& tag);
 
     void sMovement();
 
