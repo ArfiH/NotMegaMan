@@ -5,7 +5,6 @@ Texture     MegaJump        ../images/megaman/megaJump_resized.png
 Texture     MegaBuster      ../images/megaman/megaBuster.png
 Texture     Ground          ../images/mario/ground.png
 Texture     SmallCloud      ../images/mario/SmallCloud.png
-Texture     Explosion       ../images/animations/explosion.png
 Texture     BigBush         ../images/mario/BigBush.png
 Texture     SmallBush       ../images/mario/SmallBush.png
 Texture     GoombaWalk      ../images/mario/GoombaWalk.png
@@ -16,6 +15,8 @@ Texture     GoombaDeath     ../images/mario/GoombaDeath.png
 Texture		Brick			../images/mario/brick.png
 Texture		ActiveQues		../images/mario/question2_resized.png
 Texture		InactiveQues	../images/mario/question_resized.png
+Texture     Explosion       ../images/animations/explosion.png
+Texture		Coin			../images/animations/coinspin.png
 
 Animation   Stand           MegaStand       1   1
 Animation   Ground          Ground          1   1
@@ -34,6 +35,7 @@ Animation   BigCloud        BigCloud        1   1
 Animation   GoombaDeath     GoombaDeath     2   6
 Animation 	Brick			Brick			1   1
 Animation 	ActiveQues		ActiveQues		1   1
-Animation 	InactiveQues		InactiveQues		1   1
+Animation 	InactiveQues	InactiveQues	1   1
+Animation   Coin 			Coin 			24 	6
 Font        Mario           ../fonts/Mario.ttf
 Font        Tech            ../fonts/tech.ttf

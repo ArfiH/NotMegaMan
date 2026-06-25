@@ -69,7 +69,8 @@ void GameEngine::sUserInput() {
 
             // if the current scene does not have an action associated with this key, skip the event
             if (currentScene()->getActionMap().find(keyCode) == currentScene()->getActionMap().end()) {
-                continue;
+                std::cerr << "No action mapping found\n";
+                break;
             }
 
             // determine start or end action by whether it was key press or release
@@ -80,18 +81,20 @@ void GameEngine::sUserInput() {
         }
     }
     
-    // Check inputs every frame so movement stops when keys are released
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
-            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::W), "START"));
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::S), "START"));
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::A), "START"));
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-            currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::D), "START"));
+    // Check inputs every frame if play scene is active so that movement stops when keys are released
+    if (m_currentScene == "PLAY") { 
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
+                currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::W), "START"));
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+                currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::S), "START"));
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+                currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::A), "START"));
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+                currentScene()->doAction(Action(currentScene()->getActionMap().at(sf::Keyboard::Key::D), "START"));
+        }
     }
 }
 

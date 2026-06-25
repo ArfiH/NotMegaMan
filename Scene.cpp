@@ -1,6 +1,6 @@
+#include <iostream>
 #include "Scene.h"
 #include "GameEngine.h"
-
 
 Scene::Scene() = default;
 
@@ -9,6 +9,20 @@ Scene::Scene(GameEngine *gameEngine) : m_game(gameEngine) {}
 Scene::~Scene() = default;
 
 void Scene::doAction(const Action &action) {
+    // find if action name exists in m_actionMap
+    bool found = false;
+    std::string targetValue = action.name();
+    for (const auto& [key, val] : m_actionMap) {
+        if (val == targetValue) {
+            found = true;
+            break;
+        }
+    }
+    if (found == false) {
+        std::cerr << targetValue << " action not found\n";
+        return;
+    }
+
     sDoAction(action);
 }
 

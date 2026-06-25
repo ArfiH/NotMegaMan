@@ -188,10 +188,20 @@ void Scene_Play::sMovement() {
 
 void Scene_Play::sLifespan() {
     // TODO: Check lifespan of entities the have them, and destroy them if the go over
+    for (const auto& e: m_entityManager.getEntities()) {
+        if (!e->hasComponent<CLifespan>()) {
+            continue;
+        }
+        auto lifespanComponent = e->getComponent<CLifespan>();
+        if (lifespanComponent.frameCreated + lifespanComponent.lifespan < m_currentFrame) {
+            e->destroy();
+        }
+    }
 }
 
 bool Scene_Play::isColliding(std::shared_ptr<Entity> e, const std::string& tag) {
     bool isCollided = false;
+    bool isCollidedFromAbove = false;
 
     // player collision check with ground
     for (const auto& b: m_entityManager.getEntities(tag)) {
@@ -207,11 +217,6 @@ bool Scene_Play::isColliding(std::shared_ptr<Entity> e, const std::string& tag) 
         if (overlap.x > 0 && overlap.y > 0) {
             isCollided = true;
             e->getComponent<CTransform>().velocity.y = 0;
-
-            // if player is in contact with ground and not running or shooting, set state to standing
-            // if (e->getComponent<CState>().state != "Running" && e->getComponent<CState>().state != "Shooting") {
-            //     e->getComponent<CState>().state = "Standing";
-            // }
 
             // check player direction and resolve collision
             // player came from either left or right
@@ -229,19 +234,47 @@ bool Scene_Play::isColliding(std::shared_ptr<Entity> e, const std::string& tag) 
                 if (prevPos.y > pos.y) {
                     // destroy tile which has brick animation
                     if (b->getComponent<CAnimation>().animation.getName() == "Brick") {
+                        spawnBrickDebris(b);
                         b->destroy();
+                    }
+
+                    if (b->getComponent<CAnimation>().animation.getName() == "ActiveQues") {
+                        spawnCoinSpin(b);
+                        b->addComponent<CAnimation>(m_game->assets().getAnimation("InactiveQues"), true);
                     }
 
                     e->getComponent<CTransform>().pos.y += overlap.y;
                 }
                 else {
+                    isCollidedFromAbove = true;
                     e->getComponent<CTransform>().pos.y -= overlap.y;
                 }
             }
         }
     }
-    return isCollided;
+    // return isCollided;
+    return isCollidedFromAbove;
 }
+
+void Scene_Play::spawnCoinSpin(std::shared_ptr<Entity> tile) {
+    std::cerr << "Coin spawned\n";
+    const float coinGap = 60.f;
+    const vec2 coinSize = vec2(32.f, 32.f);
+    auto coin = m_entityManager.addEntity("coin");
+    coin->addComponent<CAnimation>(m_game->assets().getAnimation("Coin"), true);
+    vec2 tilePos = tile->getComponent<CTransform>().pos;
+    coin->addComponent<CTransform>(vec2(tilePos.x, tilePos.y - coinGap));
+    coin->addComponent<CBoundingBox>(coinSize);
+}
+
+void Scene_Play::spawnBrickDebris(std::shared_ptr<Entity> tile) {
+    auto debris = m_entityManager.addEntity("debris");
+    debris->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), true);
+    debris->addComponent<CTransform>(tile->getComponent<CTransform>().pos);
+    debris->addComponent<CBoundingBox>(tile->getComponent<CBoundingBox>().size);
+    debris->addComponent<CLifespan>(100, m_currentFrame);
+}
+
 
 void Scene_Play::sCollision() {
     // REMEMBER: SFML's (0,0) position is in the TOP-LEFT corner
@@ -269,12 +302,13 @@ void Scene_Play::sCollision() {
             vec2 overlap = m_worldPhysics.GetOverlap(b, e);            
             if (overlap.x > 0 && overlap.y > 0) {
                 if (e->getComponent<CAnimation>().animation.getName() == "Brick") {
+                    spawnBrickDebris(e);
                     e->destroy();
                 }
                 b->destroy();
             }
         }
-    }    
+    }
 
     // TODO: Implement player/tile collisions and resolutions
     //       Update the CState component of the player to store whether
