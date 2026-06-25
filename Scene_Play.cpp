@@ -282,7 +282,7 @@ void Scene_Play::spawnBrickDebris(std::shared_ptr<Entity> tile) {
     debris->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), true);
     debris->addComponent<CTransform>(tile->getComponent<CTransform>().pos);
     debris->addComponent<CBoundingBox>(tile->getComponent<CBoundingBox>().size);
-    debris->addComponent<CLifespan>(100, m_currentFrame);
+    debris->addComponent<CLifespan>(25, m_currentFrame);
 }
 
 
@@ -392,8 +392,6 @@ void Scene_Play::sAnimation() {
 
     if (m_player->getComponent<CState>().state == "Jumping") {
         m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Jump"), true);
-        // char arr[] = "Run";
-        // std::string str(arr); 
     }
     else if (m_player->getComponent<CState>().state == "Standing") {
         m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Stand"), true);        
@@ -405,9 +403,11 @@ void Scene_Play::sAnimation() {
         m_player->addComponent<CAnimation>(m_game->assets().getAnimation("Shot"), true);        
     }
     
-    
-    // m_player->addComponent<CAnimation>(str, m_game->assets().getTexture("Run"), (size_t)3, (size_t)12);        
-    // m_player->addComponent<CAnimation>().animation.update();
+    for (const auto &e: m_entityManager.getEntities()) {
+        if (e->hasComponent<CAnimation>()) {
+            e->getComponent<CAnimation>().animation.update();
+        }
+    }
 }
 
 void Scene_Play::onEnd() {

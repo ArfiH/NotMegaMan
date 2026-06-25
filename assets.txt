@@ -16,7 +16,7 @@ Texture		Brick			../images/mario/brick.png
 Texture		ActiveQues		../images/mario/question2_resized.png
 Texture		InactiveQues	../images/mario/question_resized.png
 Texture     Explosion       ../images/animations/explosion.png
-Texture		Coin			../images/animations/coinspin.png
+Texture		Coin			../images/animations/coinspin_resized.png
 
 Animation   Stand           MegaStand       1   1
 Animation   Ground          Ground          1   1
@@ -25,7 +25,7 @@ Animation   Jump            MegaJump        1   1
 Animation   Shot            MegaShot        1   1
 Animation   Buster          MegaBuster      1   1
 Animation   SmallCloud      SmallCloud      1   1
-Animation   Explosion       Explosion       12  8
+Animation   Explosion       Explosion       10  3
 Animation   BigBush         BigBush         1   1
 Animation   SmallBush       SmallBush       1   1
 Animation   GoombaWalk      GoombaWalk      2   8
@@ -36,6 +36,6 @@ Animation   GoombaDeath     GoombaDeath     2   6
 Animation 	Brick			Brick			1   1
 Animation 	ActiveQues		ActiveQues		1   1
 Animation 	InactiveQues	InactiveQues	1   1
-Animation   Coin 			Coin 			24 	6
+Animation   Coin 			Coin 			6 	4
 Font        Mario           ../fonts/Mario.ttf
 Font        Tech            ../fonts/tech.ttf

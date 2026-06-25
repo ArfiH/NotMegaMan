@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Animation.h"
 #include <cmath>
 #include <utility>
@@ -28,10 +29,15 @@ void Animation::update() {
 
     // TODO: 1) calculate the correct frame of animation to play based on currentFrame and speed
     //       2) set the texture rectangle properly (see constructor for sample)
-    m_currentFrame = (m_currentFrame / m_speed) % m_frameCount;
+    if (m_speed == 0) {
+        std::cerr << "m_speed is 0\n";
+        return;
+    }
+    int animFrame = (m_currentFrame / m_speed) % m_frameCount;
+    // std::cerr << "anim frame is " << animFrame << '\n';
     const int FW = m_size.x;
     const int FH = m_size.y;
-    m_sprite.setTextureRect({{m_frameCount * FW, 0}, {FW, FH}});
+    m_sprite.setTextureRect({{animFrame * FW, 0}, {FW, FH}});
 }
 
 bool Animation::hasEnded() const {
