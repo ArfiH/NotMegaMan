@@ -87,11 +87,21 @@ void Scene_Play::loadLevel(const std::string &fileName) {
             file >> anim;
             float gX, gY;
             file >> gX >> gY;
-            auto brick = m_entityManager.addEntity("tile");
+            auto tile = m_entityManager.addEntity("tile");
             // IMPORTANT: always add the CAnimation component first so that gridToMidPixel can compute correctly
-            brick->addComponent<CAnimation>(m_game->assets().getAnimation(anim), true);
-            brick->addComponent<CBoundingBox>(m_game->assets().getAnimation(anim).getSize());
-            brick->addComponent<CTransform>(gridToMidPixel(gX, gY, brick));
+            tile->addComponent<CAnimation>(m_game->assets().getAnimation(anim), true);
+            tile->addComponent<CBoundingBox>(m_game->assets().getAnimation(anim).getSize());
+            tile->addComponent<CTransform>(gridToMidPixel(gX, gY, tile));
+        }
+        else if (temp == "Dec") {
+            std::string anim = "";
+            file >> anim;
+            float gX, gY;
+            file >> gX >> gY;
+            auto dec = m_entityManager.addEntity("dec");
+            // IMPORTANT: always add the CAnimation component first so that gridToMidPixel can compute correctly
+            dec->addComponent<CAnimation>(m_game->assets().getAnimation(anim), true);
+            dec->addComponent<CTransform>(gridToMidPixel(gX, gY, dec));
         }
     }
 
@@ -291,6 +301,20 @@ void Scene_Play::sCollision() {
 
     // player/tile collision
     m_isCollidingWithGround = isColliding(m_player, "tile");
+
+    // player/coin collision
+    for (const auto& b: m_entityManager.getEntities("coin")) {
+        if (!b->hasComponent<CBoundingBox>()) {
+            continue;
+        }
+
+        vec2 overlap = m_worldPhysics.GetOverlap(m_player, b);
+        if (overlap.x > 0 && overlap.y > 0) {
+            std::cerr << "Coin collected\n";
+            m_score += 1;
+            b->destroy();
+        }
+    }
 
     // bullet/tile collision
     for (const auto& b : m_entityManager.getEntities("bullet")) {

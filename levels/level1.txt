@@ -43,6 +43,12 @@ Tile Ground 18 1
 Tile Ground 19 1
 Tile Ground 20 1
 Tile Ground 21 1
+
+Dec BigCloud 6 7 
+Dec BigCloud 10 8
+Dec BigBush 2 1.6 
+Dec BigBush 7 1.6
+
 Tile Brick 3 6
 Tile ActiveQues 4 6
 Tile Brick 5 6
